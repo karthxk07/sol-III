@@ -1,0 +1,34 @@
+# Binaries
+/bin/
+/build/
+*.exe
+*.out
+
+# Go build cache
+*.test
+*.prof
+*.cover
+go.work
+go.work.sum
+
+# Vendor
+/vendor/
+
+# Env files
+.env
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+
+# OAuth token
+/internals/modules/google/token.json
+

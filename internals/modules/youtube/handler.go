@@ -2,25 +2,55 @@ package youtube
 
 import (
 	"github.com/gin-gonic/gin"
+	"strconv"
+	"strings"
 )
 
-func Register(g *gin.Engine) {
-	youtube := g.Group("/youtube")
+func Register(r *gin.Engine) {
+	youtube_router := r.Group("/youtube")
+	youtube_router.POST("/upload", func(c *gin.Context) {
 
-	youtube.POST("/upload", func(c *gin.Context) {
+		title := c.PostForm("title")
+		description := c.PostForm("description")
+		categoryId, _ := strconv.Atoi(c.PostForm("categoryId"))
+		tags := strings.Split(c.PostForm("tags"), ",")
+		isReel := c.PostForm("isReel") == "true"
 
-		if c.Request.ContentLength <= 0 {
-			c.AbortWithStatusJSON(400, gin.H{"error": "some error occured"})
-			return
+		snippet := Snippet{
+			Title:       title,
+			Description: description,
+			Tags:        tags,
+			CategoryID:  categoryId,
 		}
 
-		err := UploadVideo(c.Request.Body)
+		fileHeader, err := c.FormFile("video")
 		if err != nil {
-			c.AbortWithStatusJSON(400, gin.H{"error": err.Error()})
+			c.JSON(400, gin.H{"error": "video file required"})
 			return
 		}
 
-		c.JSON(200, gin.H{"message": "placeholder"})
+		file, err := fileHeader.Open()
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		defer file.Close()
+
+		if isReel {
+			newFile, newSize, err := ConvertToShort(file)
+			if err != nil {
+				c.JSON(500, gin.H{"error": "short conversion failed: " + err.Error()})
+				return
+			}
+			file = newFile
+			fileHeader.Size = newSize
+		}
+
+		if err := UploadYouTubeVideo(snippet, file, fileHeader.Size); err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(200, gin.H{"status": "uploaded"})
 	})
 }
-
