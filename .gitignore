@@ -32,3 +32,13 @@ Thumbs.db
 # OAuth token
 /internals/modules/google/token.json
 
+
+#python venv 
+/internals/modules/video_processor/.venv
+
+#caption model
+/internals/modules/video_processor/model
+
+#input output videos
+/internals/modules/video_processor/input_video.mp4
+/internals/modules/video_processor/output_video.mp4
