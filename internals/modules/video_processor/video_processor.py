@@ -142,7 +142,7 @@ def crop_and_add_subtitles(input_video, output_video, srt_path):
     
     # Build ffmpeg command
     crop_filter = f"crop={new_width}:{new_height}:{x_offset}:{y_offset}"
-    subtitle_filter = f"subtitles={srt_path}:force_style='FontName=\"Helvetica\",FontSize=24,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,Outline=2,Shadow=1'"
+    subtitle_filter = f"subtitles={srt_path}:force_style='Fontname=Helvetica,Fontsize=15,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,Outline=2,Shadow=1'"
     
     cmd = [
         'ffmpeg', '-i', input_video,
