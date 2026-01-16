@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 
 	"github.com/karthxk07/sol-III/internals/modules/google"
@@ -133,36 +134,66 @@ func executeResumablePUT(location string, file multipart.File, size int64) error
 }
 
 func ConvertToShort(input multipart.File) (multipart.File, int64, error) {
+	// Get the project root directory (assuming this file is at ./internals/modules/youtube/upload.go)
+	projectRoot, err := filepath.Abs("./")
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get project root: %w", err)
+	}
 
-	inTmp, _ := os.CreateTemp("", "yt-in-*.mp4")
-	defer os.Remove(inTmp.Name())
-	io.Copy(inTmp, input)
-	inTmp.Close()
+	videoProcessorDir := filepath.Join(projectRoot, "internals", "modules", "video_processor")
+	inputVideoPath := filepath.Join(videoProcessorDir, "input_video.mp4")
+	outputVideoPath := filepath.Join(videoProcessorDir, "output_video.mp4")
+	pythonScriptPath := filepath.Join(videoProcessorDir, "video_processor.py")
 
-	outTmp, _ := os.CreateTemp("", "yt-out-*.mp4")
-	outTmp.Close()
+	// Save the uploaded file as input_video.mp4
+	inputFile, err := os.Create(inputVideoPath)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to create input file: %w", err)
+	}
 
-	// crop to vertical 9:16 and re-encode
-	cmd := exec.Command("ffmpeg",
-		"-y",
-		"-i", inTmp.Name(),
-		"-vf", "crop=ih*9/16:ih",
-		"-c:v", "libx264",
-		"-preset", "veryfast",
-		"-crf", "23",
-		"-movflags", "+faststart",
-		outTmp.Name(),
-	)
+	_, err = io.Copy(inputFile, input)
+	inputFile.Close()
+	if err != nil {
+		os.Remove(inputVideoPath)
+		return nil, 0, fmt.Errorf("failed to copy input video: %w", err)
+	}
+
+	// Clean up output file if it exists from previous run
+	os.Remove(outputVideoPath)
+
+	// Run the Python script
+	pythonPath := filepath.Join(videoProcessorDir, ".venv", "bin", "python")
+	cmd := exec.Command(pythonPath, pythonScriptPath)
+	cmd.Dir = videoProcessorDir // Set working directory to video_processor
+
+	// Capture stdout and stderr for debugging
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return nil, 0, err
+		// Clean up input file
+		os.Remove(inputVideoPath)
+		return nil, 0, fmt.Errorf("video processing failed: %w, stderr: %s", err, stderr.String())
 	}
 
-	f, err := os.Open(outTmp.Name())
+	// Open the processed output video
+	outputFile, err := os.Open(outputVideoPath)
 	if err != nil {
-		return nil, 0, err
+		os.Remove(inputVideoPath)
+		return nil, 0, fmt.Errorf("failed to open output video: %w", err)
 	}
 
-	stat, _ := f.Stat()
-	return f, stat.Size(), nil
+	// Get file size
+	stat, err := outputFile.Stat()
+	if err != nil {
+		outputFile.Close()
+		os.Remove(inputVideoPath)
+		return nil, 0, fmt.Errorf("failed to stat output video: %w", err)
+	}
+
+	// Clean up input file (keep output file open for return)
+	os.Remove(inputVideoPath)
+
+	return outputFile, stat.Size(), nil
 }

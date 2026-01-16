@@ -42,3 +42,4 @@ Thumbs.db
 #input output videos
 /internals/modules/video_processor/input_video.mp4
 /internals/modules/video_processor/output_video.mp4
+/internals/modules/video_processor/subtitles.srt
