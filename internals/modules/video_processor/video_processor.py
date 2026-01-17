@@ -191,6 +191,7 @@ def main():
         
         # Cleanup
         os.remove(audio_path)
+        os.remove(srt_path)
     else:
         print("Transcription failed. Cropping without subtitles...")
         crop_only(input_video, output_video)

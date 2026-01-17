@@ -3,6 +3,7 @@
 /build/
 *.exe
 *.out
+/dist/
 
 # Go build cache
 *.test
