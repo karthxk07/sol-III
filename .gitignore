@@ -39,6 +39,9 @@ Thumbs.db
 #caption model
 /internals/modules/video_processor/model
 
+#go modules
+/internals/vendor
+
 #input output videos
 /internals/modules/video_processor/input_video.mp4
 /internals/modules/video_processor/output_video.mp4

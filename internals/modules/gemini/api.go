@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 // VideoMetadata represents the structured output for video generation
@@ -37,6 +38,15 @@ type GeminiResponse struct {
 
 type Candidate struct {
 	Content Content `json:"content"`
+}
+
+func cleanJSONResponse(responseText string) string {
+	// Remove markdown code blocks (```json and ```)
+	responseText = strings.TrimSpace(responseText)
+	responseText = strings.TrimPrefix(responseText, "```json")
+	responseText = strings.TrimPrefix(responseText, "```")
+	responseText = strings.TrimSuffix(responseText, "```")
+	return strings.TrimSpace(responseText)
 }
 
 // ProcessQuoteWithGemini takes a quote and generates video metadata using Gemini Flash 2.5
@@ -122,10 +132,13 @@ Return ONLY the JSON object, no additional text or explanation.`, quote)
 
 	// Extract the JSON text from the response
 	responseText := geminiResp.Candidates[0].Content.Parts[0].Text
+	// Clean the response text
+	cleanedJSON := cleanJSONResponse(responseText)
+	fmt.Println(responseText)
 
 	// Parse the VideoMetadata from the response
 	var metadata VideoMetadata
-	if err := json.Unmarshal([]byte(responseText), &metadata); err != nil {
+	if err := json.Unmarshal([]byte(cleanedJSON), &metadata); err != nil {
 		return nil, fmt.Errorf("failed to parse video metadata from response: %w", err)
 	}
 
