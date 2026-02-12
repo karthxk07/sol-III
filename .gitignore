@@ -47,3 +47,8 @@ Thumbs.db
 /internals/modules/video_processor/input_video.mp4
 /internals/modules/video_processor/output_video.mp4
 /internals/modules/video_processor/subtitles.srt
+
+#password
+/internals/modules/password-locker/.encoded_output
+/internals/modules/password-locker/lost.txt
+

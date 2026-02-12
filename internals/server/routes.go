@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/karthxk07/sol-III/internals/modules/gemini"
 	"github.com/karthxk07/sol-III/internals/modules/google"
+	passwordlocker "github.com/karthxk07/sol-III/internals/modules/password-locker"
 	"github.com/karthxk07/sol-III/internals/modules/youtube"
 )
 
@@ -13,4 +14,5 @@ func Register(r *gin.Engine) {
 	google.Register(r)
 	youtube.Register(r)
 	gemini.Register(r)
+	passwordlocker.Register(r)
 }
